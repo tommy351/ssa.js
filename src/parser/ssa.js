@@ -19,7 +19,7 @@ ssa.extend(function(ssa){
       events: []
     };
 
-    ssa.util.forEach(lines, function(line, i){
+    ssa.util.each(lines, function(line, i){
       if (line[0] === ';') return;
 
       var group = line.match(/^\[(.*)\]$/);
@@ -77,7 +77,7 @@ ssa.extend(function(ssa){
     var split = str.split(/\s*,\s*/),
       arr = [];
 
-    ssa.util.forEach(split, function(item){
+    ssa.util.each(split, function(item){
       arr.push(ssa.util.lowerCamelCase(item));
     });
 
@@ -99,25 +99,25 @@ ssa.extend(function(ssa){
   ssaParser.prototype.parseStyle = function(obj, isASS){
     var self = this;
 
-    ssa.util.forEach([
-      'fontsize', 'spacing', 'angle', 'borderStyle', 'outline', 'outline',
-      'shadow', 'alignment', 'marginL', 'marginR', 'marginV', 'encoding'
+    ssa.util.each([
+      'fontsize', 'spacing', 'angle', 'borderStyle', 'outline', 'shadow',
+      'alignment', 'marginL', 'marginR', 'marginV', 'encoding'
     ], function(key){
-      if (obj[key]) obj[key] = +obj[key];
+      if (obj[key] != null) obj[key] = +obj[key];
     });
 
-    ssa.util.forEach(['scaleX', 'scaleY'], function(key){
-      if (obj[key]) obj[key] = +obj[key] / 100;
+    ssa.util.each(['scaleX', 'scaleY'], function(key){
+      if (obj[key] != null) obj[key] = +obj[key] / 100;
     });
 
-    ssa.util.forEach(['bold', 'italic', 'underline', 'strikeOut'], function(key){
-      if (obj[key]) obj[key] = obj[key] == -1;
+    ssa.util.each(['bold', 'italic', 'underline', 'strikeOut'], function(key){
+      if (obj[key] != null) obj[key] = obj[key] == -1;
     });
 
-    ssa.util.forEach([
+    ssa.util.each([
       'primaryColour', 'secondaryColour', 'outlineColour', 'tertiaryColour', 'backColour'
     ], function(key){
-      if (obj[key]){
+      if (obj[key] != null){
         if (key === 'tertiaryColour'){
           var newKey = 'secondaryColor';
         } else {
@@ -129,20 +129,21 @@ ssa.extend(function(ssa){
       }
     });
 
-    if (obj.fontsize){
-      obj.fontSize = obj.fontsize;
-      delete obj.fontsize;
-    }
-
-    if (obj.fontname){
-      obj.fontFamily = obj.fontname;
-      delete obj.fontname;
-    }
-
-    if (obj.strikeOut){
-      obj.strike = obj.strikeOut;
-      delete obj.strikeOut;
-    }
+    ssa.util.each({
+      fontsize: 'fontSize',
+      fontname: 'fontFamily',
+      strikeOut: 'strike',
+      marginL: 'marginLeft',
+      marginR: 'marginRight',
+      marginV: 'verticalMargin',
+      outline: 'strokeWidth',
+      outlineColor: 'strokeColor'
+    }, function(val, key){
+      if (obj[key] != null){
+        obj[val] = obj[key];
+        delete obj[key];
+      }
+    });
 
     if (obj.alignment){
       if (isASS){
@@ -213,12 +214,23 @@ ssa.extend(function(ssa){
   ssaParser.prototype.parseEvent = function(obj){
     var self = this;
 
-    ssa.util.forEach(['marked', 'layer', 'marginL', 'marginR', 'marginV'], function(key){
+    ssa.util.each(['marked', 'layer', 'marginL', 'marginR', 'marginV'], function(key){
       if (obj[key]) obj[key] = +obj[key];
     });
 
-    ssa.util.forEach(['start', 'end'], function(key){
+    ssa.util.each(['start', 'end'], function(key){
       if (obj[key]) obj[key] = self.toSeconds(obj[key]);
+    });
+
+    ssa.util.each({
+      marginL: 'marginLeft',
+      marginR: 'marginRight',
+      marginV: 'verticalMargin',
+    }, function(val, key){
+      if (obj[key] != null){
+        obj[val] = obj[key];
+        delete obj[key];
+      }
     });
 
     return obj;

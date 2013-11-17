@@ -79,24 +79,22 @@ ssa.extend(function(ssa){
       events = this.events,
       svg = this.svg;
 
-    for (var i in events){
-      var event = events[i];
-
-      if (event == null) continue;
+    ssa.util.each(events, function(event, i){
+      if (event == null) return;
 
       if (sec < event._ssa_start || sec > event._ssa_end){
         event.remove();
         events[i] = null;
       }
-    }
+    });
 
-    ssa.util.forEach(subtitle.events, function(event, i){
+    ssa.util.each(subtitle.events, function(event, i){
       if (events[i] || sec < event.start || sec > event.end) return;
 
       var style = styles[event.style] || styles.Default,
-        marginL = event.marginL || style.marginL,
-        marginR = event.marginR || style.marginR,
-        marginV = event.marginV || style.marginV,
+        marginLeft = event.marginLeft || style.marginLeft,
+        marginRight = event.marginRight || style.marginRight,
+        verticalMargin = event.verticalMargin || style.verticalMargin,
         group = svg.group();
 
       var text = svg.text(function(add){
@@ -130,16 +128,16 @@ ssa.extend(function(ssa){
 
       stroke.attr({
         'fill-opacity': 0,
-        stroke: ssa.util.toHexColor(style.outlineColor),
-        'stroke-opacity': style.outlineColor.a,
-        'stroke-width': style.outline,
+        stroke: ssa.util.toHexColor(style.strokeColor),
+        'stroke-opacity': style.strokeColor.a,
+        'stroke-width': style.strokeWidth,
         'stroke-linejoin': 'round',
         'stroke-linecap': 'round'
       });
 
       switch (style.textAlign){
         case 'left':
-          x = marginL;
+          x = marginLeft;
           break;
 
         case 'center':
@@ -147,13 +145,13 @@ ssa.extend(function(ssa){
           break;
 
         case 'right':
-          x = sWidth - marginR;
+          x = sWidth - marginRight;
           break;
       }
 
       switch (style.textBaseline){
         case 'top':
-          y = marginV;
+          y = verticalMargin;
           break;
 
         case 'center':
@@ -161,7 +159,7 @@ ssa.extend(function(ssa){
           break;
 
         case 'bottom':
-          y = sHeight - marginV - text.node.scrollHeight;
+          y = sHeight - verticalMargin - text.node.scrollHeight;
           break;
       }
 

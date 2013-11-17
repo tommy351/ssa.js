@@ -1,9 +1,23 @@
 ssa.extend(function(ssa){
   var util = ssa.util = {};
 
-  util.forEach = function(arr, iterator){
-    for (var i = 0, len = arr.length; i < len; i++){
-      iterator(arr[i], i);
+  var isArray = util.isArray = Array.isArray || function(arr){
+    return toString.call(arr) == '[object Array]';
+  };
+
+  var isObject = util.isObject = function(obj){
+    return toString.call(obj) == '[object Object]';
+  };
+
+  util.each = function(obj, iterator){
+    if (isArray(obj)){
+      for (var i = 0, len = obj.length; i < len; i++){
+        iterator(obj[i], i);
+      }
+    } else if (isObject(obj)){
+      for (var i in obj){
+        iterator(obj[i], i);
+      }
     }
   };
 
