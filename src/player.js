@@ -24,7 +24,7 @@ ssa.extend(function(ssa){
   };
 
   Player.prototype.load = function(subtitle){
-    this.viewbox = this.svg.viewbox(0, 0, subtitle.width, subtitle.height);
+    this.svg.viewbox(0, 0, subtitle.width, subtitle.height);
     this.subtitle = subtitle;
     this.isReady = true;
   };
@@ -77,9 +77,7 @@ ssa.extend(function(ssa){
       sHeight = subtitle.height,
       styles = subtitle.styles,
       events = this.events,
-      box = this.viewbox;
-
-    this.isProgress = true;
+      svg = this.svg;
 
     for (var i in events){
       var event = events[i];
@@ -99,9 +97,9 @@ ssa.extend(function(ssa){
         marginL = event.marginL || style.marginL,
         marginR = event.marginR || style.marginR,
         marginV = event.marginV || style.marginV,
-        group = box.group();
+        group = svg.group();
 
-      var text = box.text(function(add){
+      var text = svg.text(function(add){
         add.tspan(event.text).attr({
           'alignment-baseline': 'text-before-edge'
         });
@@ -118,7 +116,7 @@ ssa.extend(function(ssa){
         'fill-opacity': style.primaryColor.a
       });
 
-      var stroke = box.text(function(add){
+      var stroke = svg.text(function(add){
         add.tspan(event.text).attr({
           'alignment-baseline': 'text-before-edge'
         });
@@ -174,7 +172,6 @@ ssa.extend(function(ssa){
 
       group._ssa_start = event.start;
       group._ssa_end = event.end;
-      self.isProgress = false;
       events[i] = group;
     });
   };
@@ -193,7 +190,7 @@ ssa.extend(function(ssa){
     // Keep playing
     if (this.isPlaying){
       requestAnimationFrame(function(){
-        if (!self.isProgress) self.progress(self.duration);
+        self.progress(self.duration);
         self._step();
       });
     }
