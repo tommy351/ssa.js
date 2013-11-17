@@ -14,8 +14,9 @@ ssa.extend(function(ssa){
     this.options = options || {};
     this.duration = 0;
     this.isPlaying = false;
-    this.events = [];
+    this.events = {};
     this.isReady = false;
+    this.isProgress = false;
 
     if (subtitle){
       this.load(subtitle);
@@ -76,22 +77,23 @@ ssa.extend(function(ssa){
       sHeight = subtitle.height,
       styles = subtitle.styles,
       events = this.events,
-      box = this.viewbox,
-      existing = [];
+      box = this.viewbox;
 
-    ssa.util.forEach(events, function(event, i){
-      if (typeof event === 'undefined'){
-        events.splice(i, 1);
-      } else if (sec < event._ssa_start || sec > event._ssa_end){
-        events.splice(i, 1);
+    this.isProgress = true;
+
+    for (var i in events){
+      var event = events[i];
+
+      if (event == null) continue;
+
+      if (sec < event._ssa_start || sec > event._ssa_end){
         event.remove();
-      } else {
-        existing.push(event._ssa_id);
+        events[i] = null;
       }
-    });
+    }
 
     ssa.util.forEach(subtitle.events, function(event, i){
-      if (existing.indexOf(i) > -1 || sec < event.start || sec > event.end) return;
+      if (events[i] || sec < event.start || sec > event.end) return;
 
       var style = styles[event.style] || styles.Default,
         marginL = event.marginL || style.marginL,
@@ -113,7 +115,23 @@ ssa.extend(function(ssa){
 
       text.attr({
         fill: ssa.util.toHexColor(style.primaryColor),
-        'fill-opacity': style.primaryColor.a,
+        'fill-opacity': style.primaryColor.a
+      });
+
+      var stroke = box.text(function(add){
+        add.tspan(event.text).attr({
+          'alignment-baseline': 'text-before-edge'
+        });
+      });
+
+      stroke.font({
+        family: style.fontFamily,
+        size: style.fontSize,
+        anchor: textAlignToAnchor(style.textAlign)
+      });
+
+      stroke.attr({
+        'fill-opacity': 0,
         stroke: ssa.util.toHexColor(style.outlineColor),
         'stroke-opacity': style.outlineColor.a,
         'stroke-width': style.outline,
@@ -149,15 +167,15 @@ ssa.extend(function(ssa){
           break;
       }
 
-      group.add(text);
-
       group.move(x, y, true);
+
+      group.add(stroke);
+      group.add(text);
 
       group._ssa_start = event.start;
       group._ssa_end = event.end;
-      group._ssa_id = i;
-
-      events.push(group);
+      self.isProgress = false;
+      events[i] = group;
     });
   };
 
@@ -175,7 +193,7 @@ ssa.extend(function(ssa){
     // Keep playing
     if (this.isPlaying){
       requestAnimationFrame(function(){
-        self.progress(self.duration);
+        if (!self.isProgress) self.progress(self.duration);
         self._step();
       });
     }
