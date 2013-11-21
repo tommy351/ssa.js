@@ -71,20 +71,26 @@ ssa.extend(function(ssa){
     }
   };
 
+  var rAssStyle = /\{\\(.+?)\}/g;
+
+  Player.prototype._displayText = function(group, event, style){
+  };
+
   Player.prototype.progress = function(sec){
     var subtitle = this.subtitle,
       sWidth = subtitle.width,
       sHeight = subtitle.height,
       styles = subtitle.styles,
       events = this.events,
-      svg = this.svg;
+      svg = this.svg,
+      self = this;
 
     ssa.util.each(events, function(event, i){
       if (event == null) return;
 
       if (sec < event._ssa_start || sec > event._ssa_end){
         event.remove();
-        events[i] = null;
+        delete events[i];
       }
     });
 
@@ -105,7 +111,7 @@ ssa.extend(function(ssa){
 
       text.font({
         family: style.fontFamily,
-        size: style.fontSize,
+        size: style.fontSize + 'px',
         anchor: textAlignToAnchor(style.textAlign)
       });
 
@@ -122,17 +128,24 @@ ssa.extend(function(ssa){
 
       stroke.font({
         family: style.fontFamily,
-        size: style.fontSize,
+        size: style.fontSize + 'px',
         anchor: textAlignToAnchor(style.textAlign)
       });
 
       stroke.attr({
-        'fill-opacity': 0,
-        stroke: ssa.util.toHexColor(style.strokeColor),
-        'stroke-opacity': style.strokeColor.a,
-        'stroke-width': style.strokeWidth,
-        'stroke-linejoin': 'round',
-        'stroke-linecap': 'round'
+        fill: ssa.util.toHexColor(style.strokeColor),
+        'fill-opacity': style.strokeColor.a
+      });
+
+      var strokeFilter = stroke.filter(function(add){
+        var strokeEffect = new SVG.MorphologyEffect;
+
+        strokeEffect.attr({
+          operator: 'dilate',
+          radius: style.strokeWidth * 2
+        });
+
+        add.put(strokeEffect);
       });
 
       switch (style.textAlign){
@@ -165,6 +178,7 @@ ssa.extend(function(ssa){
 
       group.move(x, y, true);
 
+      group.add(strokeFilter);
       group.add(stroke);
       group.add(text);
 
