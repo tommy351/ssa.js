@@ -124,7 +124,7 @@ ssa.extend(function(ssa){
           var newKey = key.substring(0, key.length - 6) + 'Color';
         }
 
-        obj[newKey] = self.parseColor(obj[key]);
+        obj[newKey] = ssa.util.parseAbgr(obj[key]);
         delete obj[key];
       }
     });
@@ -146,63 +146,10 @@ ssa.extend(function(ssa){
     });
 
     if (obj.alignment){
-      if (isASS){
-        // Horizontal alignment
-        switch (obj.alignment % 3){
-          case 1:
-            obj.textAlign = 'left';
-            break;
+      var alignment = ssa.util.parseAlignment(obj.alignment, isASS);
 
-          case 0:
-            obj.textAlign = 'right';
-            break;
-
-          default:
-            obj.textAlign = 'center';
-        }
-
-        // Vertical alignment
-        switch (parseInt((obj.alignment - 1) / 3)){
-          case 2:
-            obj.textBaseline = 'top';
-            break;
-
-          case 1:
-            obj.textBaseline = 'center';
-            break;
-
-          default:
-            obj.textBaseline = 'bottom';
-        }
-      } else {
-        // Horizontal alignment
-        switch (obj.alignment % 4){
-          case 1:
-            obj.textAlign = 'left';
-            break;
-
-          case 2:
-            obj.textAlign = 'center';
-            break;
-
-          default:
-            obj.textAlign = 'center';
-        }
-
-        // Vertical alignment
-        switch (parseInt(obj.alignment / 4)){
-          case 2:
-            obj.textBaseline = 'top';
-            break;
-
-          case 1:
-            obj.textBaseline = 'center';
-            break;
-
-          default:
-            obj.textBaseline = 'bottom';
-        }
-      }
+      obj.textAlign = alignment.textAlign;
+      obj.textBaseline = alignment.textBaseline;
     } else {
       obj.textAlign = 'center';
       obj.textBaseline = 'bottom';
@@ -240,34 +187,5 @@ ssa.extend(function(ssa){
     var split = str.split(':');
 
     return +(parseInt(split[0], 10) * 3600 + parseInt(split[1], 10) * 60 + parseFloat(split[2], 10)).toFixed(2);
-  };
-
-  ssaParser.prototype.parseColor = function(str){
-    str = str.replace(/^&H/, '');
-
-    if (str.length == 6){
-      str = '00' + str;
-    } else {
-      if (str.length == 3){
-        str = '0' + str;
-      }
-
-      if (str.length == 4){
-        var newStr = '';
-
-        for (var i = 0; i <= 3; i++){
-          newStr += str[i] + str[i];
-        }
-
-        str = newStr;
-      }
-    }
-
-    return {
-      r: parseInt(str.substring(6, 8), 16),
-      g: parseInt(str.substring(4, 6), 16),
-      b: parseInt(str.substring(2, 4), 16),
-      a: (255 - parseInt(str.substring(0, 2), 16)) / 255
-    };
   };
 });
